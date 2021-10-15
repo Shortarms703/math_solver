@@ -1,0 +1,31 @@
+%! Author = joshua
+%! Date = 2021-10-12
+
+% Preamble
+\documentclass[12pt]{article}
+
+% Packages
+\usepackage{amsmath}
+
+% Document
+\begin{document}
+
+\begin{align*}
+    \lim_{x \to 0}
+    \frac{\sin{x}}{x}
+    & = \lim_{x \to 0}
+    \frac
+    {\frac{d}{dx}\left( \frac{\sin{x}}{x} \right)}
+    {\frac{d}{dx}\left( {x} \right)} \\
+    & = \lim_{x \to 0}
+    \frac{\cos{x}}{1} \\
+    & = \frac{\cos{0}}{1} \\
+    & = 1
+\end{align*}
+
+\begin{equation}
+    \lim_{x \to 0}
+    \frac{e^{2x}-1}{\sin(x)}\frac{1}{1}
+\end{equation}
+
+\end{document}
