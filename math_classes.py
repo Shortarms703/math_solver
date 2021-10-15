@@ -256,30 +256,24 @@ def order_operations(expression): # TODO add logs
 
     final = None
     previous = ''
+    split_operator_dict = sorted(operator_dict.items(), key=lambda x: x[0])
+    for n, imp in enumerate(zip(split_operator_dict, split_operator_dict[1:], split_operator_dict[2:])):
+        if imp[0][1] > imp[1][1] < imp[2][1]:
+            print('wont work')
+
+
     for n, importance in sorted(operator_dict.items(), key=lambda x: -x[1]):
-        section = expression[:n]
+        # section = expression[:n]
         bits = []
-        if any(x in section for x in all_operators):
-            section = section[::-1]
-            for i, ch in enumerate(section):
-                if ch in all_operators:
-                    bits.append(section[:i])
-                    break
-        else:
-            bits.append(section)
-        section = expression[n+1:]
-        if any(x in section for x in all_operators):
-            for i, ch in enumerate(section):
-                if ch in all_operators:
-                    bits.append(section[:i])
-                    break
-        else:
-            bits.append(section)
+        for section in expression[:n][::-1], expression[n+1:]:
+            if any(x in section for x in all_operators):
+                for i, ch in enumerate(section):
+                    if ch in all_operators:
+                        bits.append(section[:i])
+                        break
+            else:
+                bits.append(section)
         if final:
-            # if expression[n] == '/':
-            #     final = operator_classes[expression[n]](final, bits[-1])
-            # else:
-            #     final = operator_classes[expression[n]](final, bits[-1])
             if n > previous:
                 final = operator_classes[expression[n]](final, bits[-1])
             if n < previous:
@@ -289,30 +283,12 @@ def order_operations(expression): # TODO add logs
             final = operator_classes[expression[n]](*bits)
         previous = n
     return final
-    # accum = []
-    # expression = expression.replace(' ', '')
-    # looping = expression
-    # statements = [expression]
-    # for n, ch in enumerate(looping):
-    #     if '(' not in looping:
-    #         break
-    #     if ch == '(':
-    #         loc = bracket_span(looping[n:], brackets='()')
-    #         looping = looping[n:n + loc]
-    #         statements.append(looping[1:])
-    # # return statements
-    # x = statements.copy()
-    # for n, each in enumerate(statements[:0:-1]):
-    #     a = statements[::-1][n+1].index(each)
-    #     x[-(n + 2)] = [x[-(n + 2)][:a], x[-(n + 1)], x[-(n + 2)][a + len(each):]]
-    # return x[0]
-    #     # print(statements[::-1][n+1][a:a + len(each)])
-    #
-    # return statements
 
 
 
-expression = '(1+2^2)/3+4*4'
+expression = '(2-2^2)+2*4'.replace(' ', '')
+print(str(order_operations(expression)).replace(' ', ''))
+expression = '(2-2^2)/2*4'.replace(' ', '')
 print(str(order_operations(expression)).replace(' ', ''))
 # print(order_operations(expression))
 
