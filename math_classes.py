@@ -86,6 +86,17 @@ class Addition(Base):
         return self.sections
 
 
+class Subtraction(Addition):
+    def __repr__(self):
+        return_string = ''
+        for each in self.sections:
+            if para_needed(type(self), type(each)):
+                return_string += '(' + str(each) + ')' + ' - '
+            else:
+                return_string += str(each) + ' - '
+        return return_string[:-3]
+
+
 class Multiplication(Base):
     def __init__(self, *sections):
         super().__init__()
@@ -258,7 +269,7 @@ def order_operations(expression): # TODO add logs
     previous = ''
     split_operator_dict = sorted(operator_dict.items(), key=lambda x: x[0])
     for n, imp in enumerate(zip(split_operator_dict, split_operator_dict[1:], split_operator_dict[2:])):
-        if imp[0][1] > imp[1][1] < imp[2][1]:
+        if imp[0][1] > imp[1][1] < imp[2][1]: # type: imp: list[list]
             print('wont work')
 
 
@@ -285,13 +296,105 @@ def order_operations(expression): # TODO add logs
     return final
 
 
+def stops_increasing(operator_dict, start):
+    values_left = []
+    list_importances = list(operator_dict.values())
+    section = list_importances[:start][::-1]
+    for i, j in zip(range(len(section)), list(operator_dict.keys())[:start][::-1]):
+        if section[i] > list_importances[start]:
+            values_left.append(j)
+        else:
+            break
+    values_right = []
+    section = list_importances[start+1:]
+    for i, j in zip(range(len(section)), list(operator_dict.keys())[start+1:]):
+        if section[i] > list_importances[start]:
+            values_right.append(j)
+        else:
+            break
+    if values_left and values_right:
+        return min(values_left, key=lambda x: operator_dict[x]), min(values_right, key=lambda x: operator_dict[x])
+    elif values_left:
+        return min(values_left, key=lambda x: operator_dict[x]), None
+    elif values_right:
+        return None, min(values_right, key=lambda x: operator_dict[x])
+    else:
+        return None, None
 
-expression = '(2-2^2)+2*4'.replace(' ', '')
-print(str(order_operations(expression)).replace(' ', ''))
-expression = '(2-2^2)/2*4'.replace(' ', '')
-print(str(order_operations(expression)).replace(' ', ''))
+
+def better_order_operations(expression):
+    operator_classes = {'+': Addition, '-': Subtraction, '*': Multiplication, '/': Fraction, '^': Exponent} # TODO add logs
+    operator_chars = {'+': 1, '-': 1, '*': 2, '/': 2, '^': 3}
+    all_operators = ['+', '-', '*', '/', '^', '(', ')']
+    para = 0
+    operator_dict = {}
+    for n, ch in enumerate(expression):
+        if ch == ')':
+            para -= 4
+        if ch in operator_chars:
+            operator_dict[n] = operator_chars[ch] + para
+        if ch == '(':
+            para += 4
+
+    # -- TESTING --
+    accum = ''
+    for x, y in sorted(operator_dict.items(), key=lambda x: x[0]):
+        accum += ' ' * (x - len(accum)) + str(y)
+    print('-' * len(expression))
+    print(expression)
+    print(accum)
+    print('-' * len(expression))
+    print(operator_dict)
+    expression_dict = {}
+    locations = {} # a dict with KEYS being operator locations that have been reference and VALUES being operator locations that reference to those keys
+    for n1, n in enumerate(operator_dict.keys()):
+        left, right = stops_increasing(operator_dict, n1)
+        if left is None:
+            left = ''
+            for each in expression[:n][::-1]:
+                if each not in all_operators:
+                    left = each + left
+                else:
+                    break
+        else:
+            if left in locations:
+                left = locations[left]
+            else:
+                locations[left] = n
+        if right is None:
+            right = ''
+            for each in expression[n+1:]:
+                if each not in all_operators:
+                    right = right + each
+                else:
+                    break
+        else:
+            if right in locations:
+                right = locations[right]
+            else:
+                locations[right] = n
+        expression_dict[n] = [left, right]
+    "{1: ['3', 4], 4: ['2', '1'], 7: [1, '3'], 9: [7, 11], 11: ['2', 14], 14: ['4', '1'], 17: [9, '6']}"
+    # print(expression_dict)
+    # for loc in expression_dict:
+    #     left = expression_dict[loc][0]
+    #     right = expression_dict[loc][1]
+    #     if type(left) == str and type(right) == str:
+    #         expression_dict[loc] = operator_classes[expression[loc]]
+
+
+
+# expression = '2*3+2^2'.replace(' ', '')
+# expression = '2*3+1+2^2'.replace(' ', '')
+
+expression = '3^(2+1)*3+2/(4+1)-6'
+print(str(better_order_operations(expression)).replace(' ', ''))
+# print(str(order_operations(expression)).replace(' ', ''))
+# expression = '(2-2^2)/2*4'.replace(' ', '')
+# print(str(order_operations(expression)).replace(' ', ''))
 # print(order_operations(expression))
-
+# print(str(Addition(Addition(Multiplication(Exponent(3,Addition(2,1)), 3), Fraction(2,Addition(4,1))), -6)).replace(' ', ''))
+# print('3^(2+1)*3+2/(4+1)-6')
 
 tests = False
 if tests:
