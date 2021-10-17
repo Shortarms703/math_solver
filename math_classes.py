@@ -26,6 +26,9 @@ class Base:
     def __eq__(self, other):
         return str(self) == str(other)
 
+    def latex(self):
+        pass
+
     def get_items(self):
         raise NotImplementedError
 
@@ -80,6 +83,15 @@ class Addition(Base):
                 return_string += str(each) + ' + '
         return return_string[:-3]
 
+    def latex(self):
+        latex = ''
+        for each in self.sections:
+            if issubclass(type(each), Base):
+                latex += each.latex() + ' + '
+            else:
+                latex += str(each) + ' + '
+        return latex[:-3]
+
     def __setitem__(self, key, value):
         self.sections[key] = value
 
@@ -87,7 +99,7 @@ class Addition(Base):
         return self.sections
 
 
-class Subtraction(Addition):
+class Subtraction(Addition): # TODO call repr and latex functions of Addition but .replace('+', '-')
     def __repr__(self):
         return_string = ''
         for each in self.sections:
@@ -96,6 +108,15 @@ class Subtraction(Addition):
             else:
                 return_string += str(each) + ' - '
         return return_string[:-3]
+
+    def latex(self):
+        latex = ''
+        for each in self.sections:
+            if issubclass(type(each), Base):
+                latex += each.latex() + ' - '
+            else:
+                latex += str(each) + ' - '
+        return latex[:-3]
 
 
 class Multiplication(Base):
@@ -114,6 +135,18 @@ class Multiplication(Base):
 
     def __setitem__(self, key, value):
         self.sections[key] = value
+
+    def latex(self):
+        latex = ''
+        for each in self.sections:
+            if issubclass(type(each), Base):
+                if para_needed(type(self), type(each)):
+                    latex += f'({each.latex()}) * '
+                else:
+                    latex += f'{each.latex()} * '
+            else:
+                latex += str(each) + ' * '
+        return latex[:-3]
 
     def get_items(self):
         return self.sections
@@ -135,6 +168,18 @@ class Fraction(Base):
             self.numerator = value
         if key == 1:
             self.denominator = value
+
+    def latex(self):
+        latex = '\\frac'
+        if issubclass(type(self.numerator), Base):
+            latex += '{' + self.numerator.latex() + '}'
+        else:
+            latex += '{' + str(self.numerator) + '}'
+        if issubclass(type(self.denominator), Base):
+            latex += '{' + self.denominator.latex() + '}'
+        else:
+            latex += '{' + str(self.denominator) + '}'
+        return latex
 
     def get_items(self):
         return self.numerator, self.denominator
@@ -166,6 +211,21 @@ class Exponent(Base):
         if key == 1:
             self.power = value
 
+    def latex(self):
+        latex = ''
+        if issubclass(type(self.base), Base):
+            if para_needed(type(self), type(self.base)):
+                latex += f'({self.base.latex()}) ^'
+            else:
+                latex += f'{self.base.latex()} ^'
+        else:
+            latex += str(self.base) + '^'
+        if issubclass(type(self.power), Base):
+            latex += '{' + self.power.latex() + '}'
+        else:
+            latex += '{' + str(self.power) + '}'
+        return latex
+
     def get_items(self):
         return self.base, self.power
 
@@ -196,7 +256,7 @@ class Logarithm(Base):
         return [self.base, self.log_of]
 
 
-class SingleVariable(Base): # TODO dont think this is needed ||| it is for .fully_defined()
+class SingleVariable(Base): # TODO still not used yet
     def __init__(self, variable):
         super().__init__()
         self.variable = variable
@@ -282,14 +342,15 @@ def order_operations(expression):
         if ch == '(':
             para += 4
 
-    accum = ''
-    for x, y in sorted(operator_dict.items(), key=lambda x: x[0]):
-        accum += ' ' * (x - len(accum)) + str(y)
-    print('-' * len(expression))
-    print(expression)
-    print(accum)
-    print('-' * len(expression))
-    print(operator_dict)
+    # TESTING ----------------------------
+    # accum = ''
+    # for x, y in sorted(operator_dict.items(), key=lambda x: x[0]):
+    #     accum += ' ' * (x - len(accum)) + str(y)
+    # print('-' * len(expression))
+    # print(expression)
+    # print(accum)
+    # print('-' * len(expression))
+    # print(operator_dict)
 
     # gives more priority to operators from left to right
     for i, loc in enumerate(operator_dict):
@@ -325,7 +386,7 @@ def order_operations(expression):
                 locations[right] = n
         expression_dict[n] = [left, right]
     "{1: ['3', 4], 4: ['2', '1'], 7: [1, '3'], 9: [7, 11], 11: ['2', 14], 14: ['4', '1'], 17: [9, '6']}"
-    print('expression_dict before solving', expression_dict)
+    # print('expression_dict before solving', expression_dict)
     while list in [type(x) for x in expression_dict.values()]:
         for loc in expression_dict:
             # if not issubclass(type(expression_dict[loc]), Base) and issubclass(type(expression_dict[right]), Base):
@@ -342,14 +403,24 @@ def order_operations(expression):
             if type(left) == int and type(right) == int:
                 if issubclass(type(expression_dict[left]), Base) and issubclass(type(expression_dict[right]), Base):
                     expression_dict[loc] = operator_classes[expression[loc]](expression_dict[left], expression_dict[right])
-    print('expression_dict solved', expression_dict)
+
+    # print('expression_dict solved', expression_dict)
     return sorted(expression_dict.values(), key=lambda x: len(str(x)))[-1]
+    # return str(sorted(expression_dict.values(), key=lambda x: len(str(x)))[-1]).replace(' ', '')
 
 
-expression = '3^(2+1)*3+2/(4+1)-6'
-# expression = '2*3+1+2^2'
-# expression = '2^(1+5)'
-print(str(order_operations(expression)).replace(' ', ''))
+def latex_for_visual():
+    expression = '((2+5)^(2+1)*(3+1)+2)/(4+1)-6'
+    latex = order_operations(expression).latex()
+    return latex
+
+
+expression = '((2+5)^(2+1)*(3+1)+2)/(x-1)-6'
+print(order_operations(expression))
+
+# expression = input('enter math: ')
+# print(order_operations(expression))
+# print(latex)
 
 
 

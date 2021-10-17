@@ -1,6 +1,11 @@
 import math
 from math_classes import *
 
+
+# -------------------------
+# PROBABLY ALL BROKEN
+# -------------------------
+
 def solver(lim, equation):
     steps = []
     lim = '0'
@@ -58,4 +63,4 @@ def split_latex_equation(equation):
     return final
 
 
-print(split_latex_equation(r'\frac{e^{2x}-1}{\sin(x)}\frac{1}{1}'))
+# print(split_latex_equation(r'\frac{e^{2x}-1}{\sin(x)}\frac{1}{1}'))

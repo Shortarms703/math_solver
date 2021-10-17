@@ -1,5 +1,6 @@
 from manim import *
 from hopital_rule_solver import solver
+from math_classes import order_operations, latex_for_visual
 
 
 class SquareToCircle(Scene):
@@ -41,13 +42,11 @@ class AlignedEquation(Scene):
 
 class WholeEquation(Scene):
     def construct(self):
-        eq1_left = MathTex(r'''\lim_{x \to 0}
-    \frac{\sin{x}}{x}
-    & = \lim_{x \to 0}
-    \frac
-    {\frac{d}{dx}\left( \frac{\sin{x}}{x} \right)}
-    {\frac{d}{dx}\left( {x} \right)}''')
-        self.play(Write(eq1_left))
+        # expression = '3^(2+1)*(3+1)+2/(4+1)-6'
+        # latex = order_operations(expression).latex()
+        latex = latex_for_visual()
+        eq1_left = MathTex(latex)
+        self.add(eq1_left)
 
 
 class VectorArrow(Scene):
