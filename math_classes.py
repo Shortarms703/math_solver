@@ -1,4 +1,5 @@
 from typing import Union
+from decimal import Decimal
 
 
 class Base:
@@ -208,7 +209,7 @@ class SingleVariable(Base): # TODO dont think this is needed ||| it is for .full
 
 
 def para_needed(first, second):
-    class_list = [[Addition], [Fraction, Multiplication, SingleVariable], [Exponent, Logarithm]]
+    class_list = [[Addition, Subtraction], [Fraction, Multiplication, SingleVariable], [Exponent, Logarithm]]
 
     for operator_subset in class_list:
         if first in operator_subset and second in operator_subset:
@@ -241,61 +242,6 @@ def string_to_expression_obj(expression):
     # while not final.fully_defined():
 
 
-def order_operations(expression): # TODO add logs
-    operator_classes = {'+': Addition, '-': Addition, '*': Multiplication, '/': Fraction, '^': Exponent} # TODO add logs
-    operator_chars = {'+': 1, '-': 1, '*': 2, '/': 2, '^': 3}
-    all_operators = ['+', '-', '*', '/', '^', '(', ')']
-    para = 0
-    operator_dict = {}
-    for n, ch in enumerate(expression):
-        if ch == ')':
-            para -= 4
-        if ch in operator_chars:
-            operator_dict[n] = operator_chars[ch] + para
-        if ch == '(':
-            para += 4
-
-    # -- TESTING --
-    accum = ''
-    for x, y in sorted(operator_dict.items(), key=lambda x: x[0]):
-        accum += ' ' * (x - len(accum)) + str(y)
-    print('-' * len(expression))
-    print(expression)
-    print(accum)
-    print('-' * len(expression))
-
-
-    final = None
-    previous = ''
-    split_operator_dict = sorted(operator_dict.items(), key=lambda x: x[0])
-    for n, imp in enumerate(zip(split_operator_dict, split_operator_dict[1:], split_operator_dict[2:])):
-        if imp[0][1] > imp[1][1] < imp[2][1]: # type: imp: list[list]
-            print('wont work')
-
-
-    for n, importance in sorted(operator_dict.items(), key=lambda x: -x[1]):
-        # section = expression[:n]
-        bits = []
-        for section in expression[:n][::-1], expression[n+1:]:
-            if any(x in section for x in all_operators):
-                for i, ch in enumerate(section):
-                    if ch in all_operators:
-                        bits.append(section[:i])
-                        break
-            else:
-                bits.append(section)
-        if final:
-            if n > previous:
-                final = operator_classes[expression[n]](final, bits[-1])
-            if n < previous:
-                final = operator_classes[expression[n]](bits[0], final)
-            pass
-        else:
-            final = operator_classes[expression[n]](*bits)
-        previous = n
-    return final
-
-
 def stops_increasing(operator_dict, start):
     values_left = []
     list_importances = list(operator_dict.values())
@@ -322,7 +268,7 @@ def stops_increasing(operator_dict, start):
         return None, None
 
 
-def better_order_operations(expression):
+def order_operations(expression):
     operator_classes = {'+': Addition, '-': Subtraction, '*': Multiplication, '/': Fraction, '^': Exponent} # TODO add logs
     operator_chars = {'+': 1, '-': 1, '*': 2, '/': 2, '^': 3}
     all_operators = ['+', '-', '*', '/', '^', '(', ')']
@@ -336,7 +282,6 @@ def better_order_operations(expression):
         if ch == '(':
             para += 4
 
-    # -- TESTING --
     accum = ''
     for x, y in sorted(operator_dict.items(), key=lambda x: x[0]):
         accum += ' ' * (x - len(accum)) + str(y)
@@ -345,6 +290,11 @@ def better_order_operations(expression):
     print(accum)
     print('-' * len(expression))
     print(operator_dict)
+
+    # gives more priority to operators from left to right
+    for i, loc in enumerate(operator_dict):
+        operator_dict[loc] = operator_dict[loc] + 1 / (2+i)
+
     expression_dict = {}
     locations = {} # a dict with KEYS being operator locations that have been reference and VALUES being operator locations that reference to those keys
     for n1, n in enumerate(operator_dict.keys()):
@@ -375,26 +325,33 @@ def better_order_operations(expression):
                 locations[right] = n
         expression_dict[n] = [left, right]
     "{1: ['3', 4], 4: ['2', '1'], 7: [1, '3'], 9: [7, 11], 11: ['2', 14], 14: ['4', '1'], 17: [9, '6']}"
-    # print(expression_dict)
-    # for loc in expression_dict:
-    #     left = expression_dict[loc][0]
-    #     right = expression_dict[loc][1]
-    #     if type(left) == str and type(right) == str:
-    #         expression_dict[loc] = operator_classes[expression[loc]]
+    print('expression_dict before solving', expression_dict)
+    while list in [type(x) for x in expression_dict.values()]:
+        for loc in expression_dict:
+            # if not issubclass(type(expression_dict[loc]), Base) and issubclass(type(expression_dict[right]), Base):
+            left = expression_dict[loc][0]
+            right = expression_dict[loc][1]
+            if type(left) == str and type(right) == str:
+                expression_dict[loc] = operator_classes[expression[loc]](left, right)
+            if type(left) == str and type(right) == int:
+                if issubclass(type(expression_dict[right]), Base):
+                    expression_dict[loc] = operator_classes[expression[loc]](left, expression_dict[right])
+            if type(left) == int and type(right) == str:
+                if issubclass(type(expression_dict[left]), Base):
+                    expression_dict[loc] = operator_classes[expression[loc]](expression_dict[left], right)
+            if type(left) == int and type(right) == int:
+                if issubclass(type(expression_dict[left]), Base) and issubclass(type(expression_dict[right]), Base):
+                    expression_dict[loc] = operator_classes[expression[loc]](expression_dict[left], expression_dict[right])
+    print('expression_dict solved', expression_dict)
+    return sorted(expression_dict.values(), key=lambda x: len(str(x)))[-1]
 
-
-
-# expression = '2*3+2^2'.replace(' ', '')
-# expression = '2*3+1+2^2'.replace(' ', '')
 
 expression = '3^(2+1)*3+2/(4+1)-6'
-print(str(better_order_operations(expression)).replace(' ', ''))
-# print(str(order_operations(expression)).replace(' ', ''))
-# expression = '(2-2^2)/2*4'.replace(' ', '')
-# print(str(order_operations(expression)).replace(' ', ''))
-# print(order_operations(expression))
-# print(str(Addition(Addition(Multiplication(Exponent(3,Addition(2,1)), 3), Fraction(2,Addition(4,1))), -6)).replace(' ', ''))
-# print('3^(2+1)*3+2/(4+1)-6')
+# expression = '2*3+1+2^2'
+# expression = '2^(1+5)'
+print(str(order_operations(expression)).replace(' ', ''))
+
+
 
 tests = False
 if tests:
