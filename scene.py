@@ -1,6 +1,6 @@
 from manim import *
-from hopital_rule_solver import solver
-from math_classes import order_operations, latex_for_visual
+# from hopital_rule_solver import solver
+# from math_classes import order_operations, latex_for_visual
 
 
 class SquareToCircle(Scene):
@@ -61,4 +61,25 @@ class VectorArrow(Scene):
         arrow2 = Arrow(ORIGIN, [5, 2, 0], buff=0)
         tip_text2 = Text('(5, 2)').next_to(arrow2.get_end(), RIGHT)
         self.play(Transform(arrow, arrow2), Transform(tip_text, tip_text2))
+
+
+class ThreeDLightSourcePosition(ThreeDScene):
+    def construct(self):
+        axes = ThreeDAxes()
+
+        plane = Surface(
+            lambda x, y: np.array([x, y, x+y]), v_range=[-2, +2],
+            u_range=[-2, +2]
+        )
+        plane1 = Surface(
+            lambda x, y: np.array([-x, y, x + y]), v_range=[-2, +2],
+            u_range=[-2, +2]
+        )
+        # self.renderer.camera.light_source.move_to(3*IN) # changes the source of the light
+        plane.set_style(fill_opacity=1,stroke_color=GREEN)
+        plane1.set_style(fill_opacity=1,stroke_color=RED)
+        self.set_camera_orientation(phi=120 * DEGREES, theta=30 * DEGREES)
+        self.add(axes, plane, plane1)
+        self.begin_ambient_camera_rotation(rate=1)
+        self.wait(3)
 

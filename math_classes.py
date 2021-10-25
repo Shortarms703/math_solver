@@ -1,19 +1,20 @@
-from typing import Union
-from decimal import Decimal
+import copy
 
 
 class Base:
     def __init__(self):
-        self.current = -1
+        self._current = -1
 
     def __iter__(self):
+        self._current = -1
         return self
 
     def __next__(self):
-        self.current += 1
-        if self.current < len(self):
-            return self[self.current]
-        raise StopIteration
+        self._current += 1
+        if self._current >= len(self):
+            raise StopIteration
+        else:
+            return self[self._current]
 
     def __len__(self):
         return len(self.get_items())
@@ -22,12 +23,41 @@ class Base:
         items = self.get_items()
         return items[item]
 
+    def __setitem__(self, key, value):
+        self.get_items()[key] = value
 
     def __eq__(self, other):
         return str(self) == str(other)
 
     def latex(self):
-        pass
+        raise NotImplementedError
+
+    def is_solvable(self): # meaning there is are no other operations inside it
+        return all(issubclass(type(each), str) for each in self)
+
+    def solve(self):
+        steps = [copy.deepcopy(self)]
+        while not all(issubclass(type(each), str) for each in self):
+            self.solve1step()
+            steps.append(copy.deepcopy(self))
+        steps.append(self.solve_self())
+        return steps
+
+    def solve1step(self):
+        if all(issubclass(type(each), str) for each in self):
+            solved = self.solve_self()
+            return solved
+        else:
+            for n, each in enumerate(self):
+                if issubclass(type(each), Base):
+                    each.solve1step()
+                    each = each.solve1step() # FIXME
+                    self[n] = each
+                    return # TODO break here if you want actually only one thing to be solved
+
+
+    def solve_self(self):
+        raise NotImplementedError
 
     def get_items(self):
         raise NotImplementedError
@@ -83,6 +113,9 @@ class Addition(Base):
                 return_string += str(each) + ' + '
         return return_string[:-3]
 
+    def solve_self(self):
+        return str(sum(int(x) for x in self))
+
     def latex(self):
         latex = ''
         for each in self.sections:
@@ -108,6 +141,9 @@ class Subtraction(Addition): # TODO call repr and latex functions of Addition bu
             else:
                 return_string += str(each) + ' - '
         return return_string[:-3]
+
+    def solve_self(self): # FIXME if Base objects can have more than one item coming out of order_operations()
+        return str(int(self[0]) - int(self[1]))
 
     def latex(self):
         latex = ''
@@ -135,6 +171,12 @@ class Multiplication(Base):
 
     def __setitem__(self, key, value):
         self.sections[key] = value
+
+    def solve_self(self):
+        total = 1
+        for each in self:
+            total *= int(each)
+        return str(total)
 
     def latex(self):
         latex = ''
@@ -168,6 +210,9 @@ class Fraction(Base):
             self.numerator = value
         if key == 1:
             self.denominator = value
+
+    def solve_self(self):
+        return str(int(self.numerator) / int(self.denominator))
 
     def latex(self):
         latex = '\\frac'
@@ -210,6 +255,9 @@ class Exponent(Base):
             self.base = value
         if key == 1:
             self.power = value
+
+    def solve_self(self):
+        return str(int(self.base) ** int(self.power))
 
     def latex(self):
         latex = ''
@@ -256,7 +304,7 @@ class Logarithm(Base):
         return [self.base, self.log_of]
 
 
-class SingleVariable(Base): # TODO still not used yet
+class Variable(Base): # TODO still not used yet
     def __init__(self, variable):
         super().__init__()
         self.variable = variable
@@ -264,12 +312,15 @@ class SingleVariable(Base): # TODO still not used yet
     def __repr__(self):
         return self.variable
 
+    def latex(self):
+        return self.variable
+
     def get_items(self):
         return [self.variable]
 
 
 def para_needed(first, second):
-    class_list = [[Addition, Subtraction], [Fraction, Multiplication, SingleVariable], [Exponent, Logarithm]]
+    class_list = [[Addition, Subtraction], [Fraction, Multiplication], [Exponent, Logarithm], [Variable]]
 
     for operator_subset in class_list:
         if first in operator_subset and second in operator_subset:
@@ -291,15 +342,6 @@ def bracket_span(section, brackets='{}'):
             total_open -= 1
         if total_open == 0:
             return location
-
-
-def string_to_expression_obj(expression):
-    final = Expression(expression)
-    print(final)
-    operator_chars = ['(', ')', '+', '-', '*', '/', '^'] # TODO add logs
-    operator_chars = {'(': '', ')': '', '+': Addition, '-': Addition, '*': Multiplication, '/': Fraction, '^': Exponent} # TODO add logs
-    section_final = final
-    # while not final.fully_defined():
 
 
 def stops_increasing(operator_dict, start):
@@ -392,7 +434,11 @@ def order_operations(expression):
             # if not issubclass(type(expression_dict[loc]), Base) and issubclass(type(expression_dict[right]), Base):
             left = expression_dict[loc][0]
             right = expression_dict[loc][1]
-            if type(left) == str and type(right) == str:
+            if str(left).isalpha():
+                left = Variable(left)
+            if str(right).isalpha():
+                right = Variable(right)
+            if issubclass(type(left), (str, Base)) and issubclass(type(right), (str, Base)):
                 expression_dict[loc] = operator_classes[expression[loc]](left, right)
             if type(left) == str and type(right) == int:
                 if issubclass(type(expression_dict[right]), Base):
@@ -403,6 +449,7 @@ def order_operations(expression):
             if type(left) == int and type(right) == int:
                 if issubclass(type(expression_dict[left]), Base) and issubclass(type(expression_dict[right]), Base):
                     expression_dict[loc] = operator_classes[expression[loc]](expression_dict[left], expression_dict[right])
+
 
     # print('expression_dict solved', expression_dict)
     return sorted(expression_dict.values(), key=lambda x: len(str(x)))[-1]
@@ -415,9 +462,16 @@ def latex_for_visual():
     return latex
 
 
-expression = '((2+5)^(2+1)*(3+1)+2)/(x-1)-6'
-print(order_operations(expression))
 
+a = '(2+5)^(2+1)*(3+1)'
+a = '7^3+1+2'
+a = order_operations(a)
+a_solved = a.solve()
+print(a_solved)
+
+
+# expression = '((2+5)^(2+1)*(3+1)+2)/(x-1)-6'
+# expression = order_operations(expression)
 # expression = input('enter math: ')
 # print(order_operations(expression))
 # print(latex)
