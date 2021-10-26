@@ -125,7 +125,10 @@ class Subtraction(Addition):  # TODO call repr and latex functions of Addition b
         return return_string[:-3]
 
     def solve_self(self):  # FIXME if Base objects can have more than one item coming out of order_operations()
-        return str(int(self[0]) - int(self[1]))
+        if all(float(each).is_integer() for each in self):
+            return str(int(float(self[0]) - float(self[1])))
+        else:
+            return str(float(self[0]) - float(self[1]))
 
     def latex(self):
         latex = ''
@@ -195,7 +198,10 @@ class Fraction(Base):
             self.denominator = value
 
     def solve_self(self):
-        return str(float(self.numerator) / float(self.denominator))
+        if (float(self.numerator) / float(self.denominator)).is_integer():
+            return str(int(float(self.numerator) / float(self.denominator)))
+        else:
+            return str(float(self.numerator) / float(self.denominator))
 
     def latex(self):
         latex = '\\frac'
@@ -473,7 +479,4 @@ def steps_to_solve(expression):
     return steps
 
 
-
-tests = False
-if tests:
-    assert str(order_operations('(1+2^2)/3+4')) == '(1 + 2^2)/3 + 4'
+print(steps_to_solve('(1^4*2^2+3^3)-2^5/4'))
