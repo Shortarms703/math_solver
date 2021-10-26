@@ -35,40 +35,6 @@ class Base:
     def is_solvable(self):  # meaning there is are no other operations inside it
         return all(issubclass(type(each), str) for each in self)
 
-    def best_solve_ever(self, step=False): # DONT THINK THIS IS USED
-        results = []
-        step = step
-        for my_item in self:
-            if not all(issubclass(type(each), str) for each in self) and not step:
-                my_item = my_item.solve_self()
-                results.append(my_item)
-                step = True
-            else:
-                results.append(self.best_solve_ever(step))
-        return results
-
-    def solve(self): # DONT THINK THIS IS USED
-        steps = [copy.deepcopy(self)]
-        while not all(issubclass(type(each), str) for each in self):
-            self.solve1step()
-            steps.append(copy.deepcopy(self))
-        steps.append(self.solve_self())
-        return steps
-
-    def solve1step(self, top=True): # DONT THINK THIS IS USED
-        if all(issubclass(type(each), str) for each in self):
-            solved = self.solve_self()
-            return solved
-        else:
-            for n, each in enumerate(self):
-                if issubclass(type(each), Base):
-                    if top is True:
-                        each = each.solve1step(top=False)  # FIXME
-                        self[n] = each
-                    if top is False:
-                        return each.solve1step(top=False)
-                break
-
     def solve_self(self):
         raise NotImplementedError
 
@@ -506,18 +472,6 @@ def steps_to_solve(expression):
     steps.append(my_list.solve_self())
     return steps
 
-
-#
-# a = '(2+5)^(2+1)*(3+1)'
-# a = '7^3+1+2'
-# a = order_operations(a)
-# a_solved = a.best_solve_ever()
-# print(a_solved)
-# expression = '((2+5)^(2+1)*(3+1)+2)/(x-1)-6'
-# expression = order_operations(expression)
-# expression = input('enter math: ')
-# print(order_operations(expression))
-# print(latex)
 
 
 tests = False
