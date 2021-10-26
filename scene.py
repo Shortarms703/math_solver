@@ -1,6 +1,6 @@
 from manim import *
 # from hopital_rule_solver import solver
-# from math_classes import order_operations, latex_for_visual
+from math_classes import steps_to_solve, latex_for_visual
 
 
 class SquareToCircle(Scene):
@@ -18,7 +18,10 @@ class SquareToCircle(Scene):
 
 class AlignedEquation(Scene):
     def construct(self):
-        all_steps = solver(None, None)
+        # steps = steps_to_solve('(2+5)^(2+1)*(3+1)')
+        steps = steps_to_solve('(1+2^2)/3+4')
+        all_steps = [latex_for_visual(str(expression)) for expression in steps[:-1]]
+        all_steps.append(str(steps[-1]))
         VERTICAL_SPACING = 1.5 * UP
         LAG_RATIO = 0.4
 
@@ -40,13 +43,13 @@ class AlignedEquation(Scene):
                 self.play(AnimationGroup(*[x.animate.shift(VERTICAL_SPACING) for x in entire_equation]))
 
 
-class WholeEquation(Scene):
-    def construct(self):
-        # expression = '3^(2+1)*(3+1)+2/(4+1)-6'
-        # latex = order_operations(expression).latex()
-        latex = latex_for_visual()
-        eq1_left = MathTex(latex)
-        self.add(eq1_left)
+# class WholeEquation(Scene):
+#     def construct(self):
+#         # expression = '3^(2+1)*(3+1)+2/(4+1)-6'
+#         # latex = order_operations(expression).latex()
+#         latex = latex_for_visual()
+#         eq1_left = MathTex(latex)
+#         self.add(eq1_left)
 
 
 class VectorArrow(Scene):
