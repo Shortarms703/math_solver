@@ -43,17 +43,18 @@ class Base:
         steps.append(self.solve_self())
         return steps
 
-    def solve1step(self):
+    def solve1step(self, top=True):
         if all(issubclass(type(each), str) for each in self):
             solved = self.solve_self()
             return solved
         else:
             for n, each in enumerate(self):
                 if issubclass(type(each), Base):
-                    each.solve1step()
+                    print('hi')
                     each = each.solve1step() # FIXME
                     self[n] = each
-                    return # TODO break here if you want actually only one thing to be solved
+                break
+
 
 
     def solve_self(self):
