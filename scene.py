@@ -1,6 +1,6 @@
 from manim import *
 # from hopital_rule_solver import solver
-from math_classes import steps_to_solve, latex_for_visual
+from math_functions import *
 
 
 class SquareToCircle(Scene):
