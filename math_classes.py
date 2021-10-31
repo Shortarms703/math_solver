@@ -32,6 +32,9 @@ class Base:
     def is_solvable(self):  # meaning there is are no other operations inside it
         return all(issubclass(type(each), str) for each in self)
 
+    def should_simplify(self):
+        raise NotImplementedError
+
     def solve_self(self):
         raise NotImplementedError
 
@@ -291,15 +294,18 @@ class Logarithm(Base):
         return [self.base, self.log_of]
 
 
-class Variable(Base):  # TODO still not used yet
+class Variable(Base):
     def __init__(self, variable):
         super().__init__()
         self.variable = variable
 
     def __repr__(self):
-        return self.variable
+        return str(self.variable)
 
     def latex(self):
+        return self.variable
+
+    def solve_self(self):
         return self.variable
 
     def get_items(self):

@@ -18,11 +18,11 @@ class SquareToCircle(Scene):
 
 class AlignedEquation(Scene):
     def construct(self):
-        # steps = steps_to_solve('(2+5)^(2+1)/(3+1)')
+        steps = steps_to_solve('(2+5)^(2+1)*(3+1)')
         # steps = steps_to_solve('(1+2^2)/3+4')
         # steps = steps_to_solve('(1^4*2^2+3^3)-2^5/4')
         # steps = steps_to_solve('24-16/4*2+3')
-        steps = steps_to_solve('((2+5)^(2+1)*(3+1)+2)/(4+1)-6')
+        # steps = steps_to_solve('((2+5)^(2+1)*(3+1)+2)/(4+1)-6')
         all_steps = [latex_for_visual(str(expression)) for expression in steps[:-1]]
         all_steps.append(str(steps[-1]))
         VERTICAL_SPACING = 1.5 * UP

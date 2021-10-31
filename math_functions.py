@@ -70,7 +70,7 @@ def order_operations(expression):
         operator_dict[loc] = operator_dict[loc] + 1 / (2 + i)
 
     expression_dict = {}
-    locations = {}  # a dict with KEYS being operator locations that have been reference and VALUES being operator locations that reference to those keys
+    locations = {}
     for n1, n in enumerate(operator_dict.keys()):
         left, right = stops_increasing(operator_dict, n1)
         if left is None:
@@ -98,11 +98,8 @@ def order_operations(expression):
             else:
                 locations[right] = n
         expression_dict[n] = [left, right]
-    "{1: ['3', 4], 4: ['2', '1'], 7: [1, '3'], 9: [7, 11], 11: ['2', 14], 14: ['4', '1'], 17: [9, '6']}"
-    # print('expression_dict before solving', expression_dict)
     while list in [type(x) for x in expression_dict.values()]:
         for loc in expression_dict:
-            # if not issubclass(type(expression_dict[loc]), Base) and issubclass(type(expression_dict[right]), Base):
             left = expression_dict[loc][0]
             right = expression_dict[loc][1]
             if str(left).isalpha():
@@ -121,14 +118,10 @@ def order_operations(expression):
                 if issubclass(type(expression_dict[left]), Base) and issubclass(type(expression_dict[right]), Base):
                     expression_dict[loc] = operator_classes[expression[loc]](expression_dict[left],
                                                                              expression_dict[right])
-
-    # print('expression_dict solved', expression_dict)
     return sorted(expression_dict.values(), key=lambda x: len(str(x)))[-1]
-    # return str(sorted(expression_dict.values(), key=lambda x: len(str(x)))[-1]).replace(' ', '')
 
 
 def latex_for_visual(expression):
-    # expression = '((2+5)^(2+1)*(3+1)+2)/(4+1)-6'
     latex = order_operations(expression).latex()
     return latex
 
@@ -139,7 +132,6 @@ def traverse_nested_list(my_nested_list):
         if type(my_item) is str:
             results.append(my_item)
         elif all(isinstance(each, str) for each in my_item):
-            # if not solved_one:
             solved = my_item.solve_self()
             results.append(solved)
         elif issubclass(type(my_item), Base):
@@ -150,10 +142,18 @@ def traverse_nested_list(my_nested_list):
 
 def steps_to_solve(expression):
     steps = []
-    my_list = order_operations(expression)
+    if not issubclass(type(expression), Base):
+        my_list = order_operations(expression)
+    else:
+        my_list = expression
+
     while any(issubclass(type(each), Base) for each in my_list):
         steps.append(my_list)
         my_list = traverse_nested_list(my_list)
     steps.append(my_list)
     steps.append(my_list.solve_self())
     return steps
+
+
+
+print(steps_to_solve('2*(x+3)'))
